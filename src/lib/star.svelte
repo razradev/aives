@@ -1,5 +1,5 @@
 <script>
-  let { animating } = $props();
+  let { animating, userTyping } = $props();
 </script>
 
 <svg
@@ -14,17 +14,23 @@
   <defs id="defs2">
     <linearGradient id="linearGradient11935">
       <stop
-        style="stop-color:#f72585;stop-opacity:1;"
+        style="stop-color:{userTyping
+          ? 'var(--color-g3)'
+          : 'black'};stop-opacity:1;"
         offset="0"
         id="stop11931"
       />
       <stop
-        style="stop-color:#7209b7;stop-opacity:1;"
+        style="stop-color:var(--color-{userTyping
+          ? 'g4'
+          : 'g4'});stop-opacity:1;"
         offset="0.5"
         id="stop13393"
       />
       <stop
-        style="stop-color:#3a0ca3;stop-opacity:1;"
+        style="stop-color:var(--color-{userTyping
+          ? 'g5'
+          : 'g3'});stop-opacity:1;"
         offset="1"
         id="stop11933"
       />

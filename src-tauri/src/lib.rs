@@ -4,7 +4,7 @@ use ollama_rs::models::ModelOptions;
 use ollama_rs::Ollama;
 use std::sync::Arc;
 use tauri::path::BaseDirectory::Resource;
-use tauri::Manager;
+use tauri::{Manager, PhysicalPosition};
 use tokio::sync::Mutex;
 mod ckokoros2;
 mod cmouse;
@@ -28,6 +28,18 @@ pub fn run() {
                 history: Mutex::new(vec![ChatMessage::system("System prompt".to_string())]),
                 tts_instance: Arc::new(Mutex::new(None)),
             });
+
+            let win = app.get_webview_window("main").unwrap();
+            let win_dim = win.outer_size().unwrap();
+            let monitor_dim = win
+                .current_monitor()
+                .unwrap()
+                .expect("Error getting monitor x");
+            let _ = win.set_position(PhysicalPosition::new(
+                16,
+                (monitor_dim.size().height as f32 / 2.0 - win_dim.height as f32 / 2.0).round()
+                    as i32,
+            ));
 
             let app_handle = app.handle();
 

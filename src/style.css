@@ -3,6 +3,14 @@
 @theme {
   --animate-decoration-pulse: decoration-pulse 0.5s ease-in-out infinite;
 
+  --color-g5: #3a0ca3;
+  --color-g4: #7209b7;
+  --color-g3: #f72585;
+  --color-g2: #9ac4f8;
+  --color-g1: #e8e9fC;
+  --font-header: "Racing Sans One", "sans-serif";
+  --font-body: "Fira Sans", "sans-serif";
+
 @keyframes decoration-pulse {
   0% {text-decoration-color: #FDD3E7;}
   33% {text-decoration-color: #E0C8EF;}
@@ -10,21 +18,12 @@
   100% {text-decoration-color: #FDD3E7;}
 }
 }
-* {
-    font-family: "Mulish";
-    font-weight: normal;
-    font-size: 1rem;
-    line-height: 1.2em;
-    transition-property: scale color;
-    transition-duration: 200ms;
-    transition-timing-function: ease-in-out;
-}
 
-.origin-button {
-    transform-origin: 3.75dvw 78.75dvh;
-}
-.origin-text {
-    transform-origin: 3.75dvw 3.75dvh;
+* {
+  overflow-x: clip;
+    transition-property: scale color;
+    transition-duration: 150ms;
+    transition-timing-function: ease-in-out;
 }
 
 [contenteditable][placeholder]:empty:before {
@@ -57,7 +56,13 @@
 }
 
 @font-face {
-    font-family: "Mulish";
-    src: url("/Mulish-VariableFont_wght.ttf");
+    font-family: "Racing Sans One";
+    src: url("/RacingSansOne-Regular.ttf");
+    font-style: bold;
+}
+
+@font-face {
+    font-family: "Fira Sans";
+    src: url("/FiraSans-Medium.ttf");
     font-style: normal;
 }

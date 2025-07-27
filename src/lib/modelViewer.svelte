@@ -4,19 +4,27 @@
   import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
+  import {
+    createVRMAnimationClip,
+    VRMAnimationLoaderPlugin,
+    VRMLookAtQuaternionProxy,
+  } from "@pixiv/three-vrm-animation";
 
-  let { hidden = $bindable(), responding } = $props();
+  let { hidden = $bindable(), responding, animationIndex = 0 } = $props();
 
   let currentVrm: any = undefined;
-  let currentMixer: THREE.AnimationMixer | undefined = undefined;
+  let currentVrmAnimation: any;
+  let currentVrmAnimationIndex: number = animationIndex;
+  let currentMixer: any;
+  let animations: any;
   let overCanvas: boolean = $state(false);
 
   onMount(() => {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(15, 1, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(10, 1.54, 0.1, 1000);
 
     camera.position.z = 5.0;
-    camera.position.y = 1.1;
+    camera.position.y = 1.3;
 
     const light = new THREE.AmbientLight(0xffffff, 1);
     scene.add(light);
@@ -31,9 +39,9 @@
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: false,
+      antialias: true,
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth, window.innerHeight * 0.65);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.autoClear = false;
     const canvas = document
@@ -50,8 +58,43 @@
       return new VRMLoaderPlugin(parser);
     });
 
+    loader.register((parser) => {
+      return new VRMAnimationLoaderPlugin(parser);
+    });
+
+    function tryInitVRMA(gltf) {
+      const vrmAnimations = gltf.animations;
+
+      if (vrmAnimations == null) {
+        return;
+      }
+
+      currentVrmAnimation = vrmAnimations[0] ?? null;
+
+      console.log(vrmAnimations);
+      animations = vrmAnimations;
+    }
+
+    function initAnimationClip() {
+      animationIndex %= animations.length;
+      console.log(animationIndex);
+      currentVrmAnimationIndex = animationIndex;
+      currentVrmAnimation = animations[currentVrmAnimationIndex];
+      if (currentVrm && currentVrmAnimation) {
+        currentMixer = new THREE.AnimationMixer(currentVrm.scene);
+
+        const clip = currentVrmAnimation;
+        currentMixer.clipAction(clip).play();
+        //currentMixer.timeScale = params.timeScale;
+
+        currentVrm.humanoid.resetNormalizedPose();
+        currentVrm.lookAt.reset();
+        currentVrm.lookAt.autoUpdate = currentVrmAnimation.lookAtTrack != null;
+      }
+    }
+
     loader.load(
-      "/Hoshino.vrm",
+      "/Hoshino0.3.vrm",
       (gltf) => {
         const vrm = gltf.userData.vrm;
         VRMUtils.removeUnnecessaryVertices(gltf.scene);
@@ -60,6 +103,8 @@
         scene.add(vrm.scene);
         currentVrm = vrm;
         vrm.lookAt.target = lookAtTarget;
+
+        tryInitVRMA(gltf);
         // prepareAnimation(vrm); // Uncomment if you want to use the animation
       },
       (progress) =>
@@ -71,35 +116,6 @@
       (error) => console.error(error)
     );
 
-    // Function for animation (optional, can be moved or removed based on needs)
-    function prepareAnimation(vrm: any) {
-      currentMixer = new THREE.AnimationMixer(vrm.scene);
-
-      const quatA = new THREE.Quaternion(0.0, 0.0, 0.0, 1.0);
-      const quatB = new THREE.Quaternion(0.0, 0.0, 0.0, 1.0);
-      quatB.setFromEuler(new THREE.Euler(0.0, 0.0, 0.25 * Math.PI));
-
-      const armTrack = new THREE.QuaternionKeyframeTrack(
-        vrm.humanoid.getNormalizedBoneNode("leftUpperArm").name + ".quaternion",
-        [0.0, 0.5, 1.0],
-        [...quatA.toArray(), ...quatB.toArray(), ...quatA.toArray()]
-      );
-
-      const blinkTrack = new THREE.NumberKeyframeTrack(
-        vrm.expressionManager.getExpressionTrackName("blink"),
-        [0.0, 0.5, 1.0],
-        [0.0, 1.0, 0.0]
-      );
-
-      const clip = new THREE.AnimationClip("Animation", 1.0, [
-        armTrack,
-        blinkTrack,
-      ]);
-
-      const action = currentMixer.clipAction(clip);
-      action.play();
-    }
-
     const clock = new THREE.Clock();
     clock.start();
 
@@ -108,27 +124,31 @@
 
       const deltaTime = clock.getDelta();
 
-      if (!hidden) {
-        invoke("check_cursor_region", { hidden: hidden }).then((data) => {
-          if (data != null && data.length == 3) {
+      invoke("check_cursor_region", { hidden: hidden }).then((data) => {
+        if (data != null && data.length == 3) {
+          if (!hidden) {
             lookAtTarget.position.x = 10.0 * data[0];
             lookAtTarget.position.y = -10.0 * data[1];
-            overCanvas = data[2];
           }
-        });
-      }
+          overCanvas = data[2];
+        }
+      });
 
       if (currentVrm) {
         // You might want to control expressions based on 'responding' prop here
-        if (responding) {
+        /*if (responding) {
           currentVrm.expressionManager.setValue("ih", 1); // Example expression
         } else {
           currentVrm.expressionManager.setValue("ih", 0); // Reset or default
-        }
+        }*/
         currentVrm.update(deltaTime);
-        if (currentMixer) {
-          currentMixer.update(deltaTime);
-        }
+      }
+      if (currentMixer) {
+        currentMixer.update(deltaTime);
+      }
+
+      if (animationIndex != currentVrmAnimationIndex) {
+        initAnimationClip();
       }
 
       if (!hidden) {
@@ -145,10 +165,10 @@
 
 <div
   id="renderer"
-  class="overflow-hidden {hidden ? 'scale-0' : 'scale-100'} {!hidden &&
+  class="overflow-hidden origin-left {hidden ? 'w-0' : 'w-dvw'} {!hidden &&
   overCanvas
     ? 'opacity-10'
-    : 'opacity-100'} origin-button w-dvw h-dvh z-0"
+    : 'opacity-100'} origin-button h-[65dvh] z-0"
 ></div>
 
 <style>
