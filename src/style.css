@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --animate-decoration-pulse: decoration-pulse 0.5s ease-in-out infinite;
+
+@keyframes decoration-pulse {
+  0% {text-decoration-color: #FDD3E7;}
+  33% {text-decoration-color: #E0C8EF;}
+  67% {text-decoration-color: #D3C9EB;}
+  100% {text-decoration-color: #FDD3E7;}
+}
+}
+* {
+    font-family: "Mulish";
+    font-weight: normal;
+    font-size: 1rem;
+    line-height: 1.2em;
+    transition-property: scale color;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+}
+
+.origin-button {
+    transform-origin: 3.75dvw 78.75dvh;
+}
+.origin-text {
+    transform-origin: 3.75dvw 3.75dvh;
+}
+
+[contenteditable][placeholder]:empty:before {
+  content: attr(placeholder);
+  color: #3a0ca3;
+  background-color: transparent;
+}
+
+.hidden-placeholder[placeholder]:empty:before {
+  color:  transparent;
+}
+
+::-webkit-scrollbar
+{
+  width: 2dvw;
+}
+
+::-webkit-scrollbar-track
+{
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb
+{
+    background-image: linear-gradient(transparent, #7209b7, #3a0ca3, transparent);
+}
+
+.taskbar {
+    bottom: calc(25% - 3rem);
+}
+
+@font-face {
+    font-family: "Mulish";
+    src: url("/Mulish-VariableFont_wght.ttf");
+    font-style: normal;
+}
